@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PY-17 | Verification Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a2e;
+            --surface2: #16213e;
+            --accent: #e94560;
+            --accent2: #0f3460;
+            --ok: #00c853;
+            --warn: #ffd600;
+            --fail: #ff1744;
+            --text: #e0e0e0;
+            --text-muted: #9e9e9e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+        header {
+            text-align: center;
+            padding: 3rem 0 2rem;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 2.5rem;
+        }
+        header h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-top: .5rem;
+        }
+        header .meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.2rem;
+            font-size: .85rem;
+            color: var(--text-muted);
+        }
+        header .meta span { display: flex; align-items: center; gap: .4rem; }
+
+        /* Score bar */
+        .score-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .score-circle {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 800;
+            flex-shrink: 0;
+            background: conic-gradient(var(--warn) 0% 45%, #333 45% 100%);
+            position: relative;
+        }
+        .score-circle::after {
+            content: '';
+            width: 76px; height: 76px;
+            border-radius: 50%;
+            background: var(--surface);
+            position: absolute;
+        }
+        .score-circle span { position: relative; z-index: 1; color: var(--warn); }
+        .score-details { flex: 1; }
+        .score-details h2 { font-size: 1.3rem; margin-bottom: .3rem; }
+        .score-details p { color: var(--text-muted); font-size: .9rem; }
+
+        /* Stats pills */
+        .stats {
+            display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;
+        }
+        .pill {
+            padding: .35rem 1rem;
+            border-radius: 20px;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+        .pill.ok   { background: rgba(0,200,83,.15); color: var(--ok); border: 1px solid rgba(0,200,83,.3); }
+        .pill.warn { background: rgba(255,214,0,.12); color: var(--warn); border: 1px solid rgba(255,214,0,.3); }
+        .pill.fail { background: rgba(255,23,68,.12); color: var(--fail); border: 1px solid rgba(255,23,68,.3); }
+
+        /* Section */
+        section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        /* Issue cards */
+        .issue {
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--warn);
+        }
+        .issue.critical { border-left-color: var(--fail); }
+        .issue.ok { border-left-color: var(--ok); }
+        .issue .tag {
+            display: inline-block;
+            padding: .15rem .6rem;
+            border-radius: 4px;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: .5rem;
+        }
+        .issue.critical .tag { background: rgba(255,23,68,.2); color: var(--fail); }
+        .issue .tag { background: rgba(255,214,0,.15); color: var(--warn); }
+        .issue.ok .tag { background: rgba(0,200,83,.15); color: var(--ok); }
+        .issue h3 { font-size: 1rem; margin-bottom: .4rem; }
+        .issue p { color: var(--text-muted); font-size: .88rem; }
+
+        /* Code blocks */
+        pre { border-radius: 8px !important; margin: .8rem 0 !important; }
+        pre code { font-size: .85rem !important; font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace !important; }
+        code:not(pre code) {
+            background: rgba(255,255,255,.08);
+            padding: .15rem .4rem;
+            border-radius: 4px;
+            font-size: .85em;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .versus {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: .8rem 0;
+        }
+        .versus > div { position: relative; }
+        .versus > div::before {
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            position: absolute;
+            top: 8px; right: 12px;
+            z-index: 2;
+            padding: .1rem .5rem;
+            border-radius: 4px;
+        }
+        .versus > .before::before { content: 'Сейчас'; background: rgba(255,23,68,.3); color: var(--fail); }
+        .versus > .after::before  { content: 'Лучше'; background: rgba(0,200,83,.3); color: var(--ok); }
+
+        /* Edge case table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: .8rem 0;
+            font-size: .88rem;
+        }
+        th, td {
+            padding: .6rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        td .status {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: .4rem;
+        }
+        td .status.green { background: var(--ok); }
+        td .status.red   { background: var(--fail); }
+        td .status.yellow { background: var(--warn); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .score-section { flex-direction: column; text-align: center; }
+            .versus { grid-template-columns: 1fr; }
+            header .meta { flex-direction: column; gap: .5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>PY-17: Удаление дубликатов</h1>
+        <div class="subtitle">Verification Report &mdash; delete.py</div>
+        <div class="meta">
+            <span>Python 3.14</span>
+            <span>Файл: <code>py17-dulicates/delete.py</code></span>
+            <span>Строк кода: 8</span>
+        </div>
+    </header>
+
+    <!-- ===== SCORE ===== -->
+    <div class="score-section">
+        <div class="score-circle"><span>4.5</span></div>
+        <div class="score-details">
+            <h2>Оценка: 4.5 / 10</h2>
+            <p>Код работает корректно на данном входе, но содержит серьёзные замечания по стилю, архитектуре, производительности и полноте решения.</p>
+            <div class="stats">
+                <span class="pill ok">Корректность +2</span>
+                <span class="pill warn">Стиль -2</span>
+                <span class="pill warn">Производительность -1.5</span>
+                <span class="pill fail">Архитектура -2</span>
+                <span class="pill fail">Полнота -2</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ORIGINAL CODE ===== -->
+    <section>
+        <h2>Исходный код</h2>
+        <pre><code class="language-python">lst = [1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 6, 7, 7, 9]
+
+unique_lst = []
+for x in lst:
+    if x not in unique_lst:
+        unique_lst.append(x)
+
+print(unique_lst)</code></pre>
+        <p>Вывод: <code>[1, 2, 3, 4, 5, 6, 7, 9]</code> &mdash; результат правильный.</p>
+    </section>
+
+    <!-- ===== ISSUES ===== -->
+    <section>
+        <h2>Найденные замечания</h2>
+
+        <!-- #0 -->
+        <div class="issue critical">
+            <span class="tag">Опечатка</span>
+            <h3>#0 &mdash; Название папки <code>py17-dulicates</code></h3>
+            <p>Пропущена буква <strong>p</strong> &mdash; правильно <code>py17-d<em>u</em>plicates</code>. Это не ошибка кода, но показывает невнимательность. В реальном проекте опечатка в имени модуля/пакета &mdash; это баг, который потом тянется через все импорты.</p>
+        </div>
+
+        <!-- #1 -->
+        <div class="issue critical">
+            <span class="tag">Архитектура</span>
+            <h3>#1 &mdash; Нет функции</h3>
+            <p>Весь код написан в глобальной области. Это значит, что его <strong>нельзя переиспользовать</strong> и нельзя протестировать. Даже в учебном задании стоит оформлять логику как функцию.</p>
+            <div class="versus">
+                <div class="before">
+<pre><code class="language-python">lst = [1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 6, 7, 7, 9]
+
+unique_lst = []
+for x in lst:
+    if x not in unique_lst:
+        unique_lst.append(x)
+
+print(unique_lst)</code></pre>
+                </div>
+                <div class="after">
+<pre><code class="language-python">def remove_duplicates(items: list) -> list:
+    """Удаляет дубликаты, сохраняя порядок."""
+    seen = set()
+    result = []
+    for item in items:
+        if item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+
+if __name__ == "__main__":
+    numbers = [1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 6, 7, 7, 9]
+    print(remove_duplicates(numbers))</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- #2 -->
+        <div class="issue critical">
+            <span class="tag">Производительность</span>
+            <h3>#2 &mdash; Алгоритмическая сложность O(n&sup2;)</h3>
+            <p>Оператор <code>x not in unique_lst</code> выполняет линейный поиск по списку &mdash; это <strong>O(n)</strong> на каждой итерации, итого <strong>O(n&sup2;)</strong> в целом. На 14 элементах незаметно, но на 1 000 000 элементах разница катастрофическая.</p>
+            <p>Проверка принадлежности через <code>set</code> &mdash; это <strong>O(1)</strong> в среднем, что даёт общую сложность <strong>O(n)</strong>.</p>
+<pre><code class="language-python"># O(n) — с сохранением порядка
+seen = set()
+result = []
+for x in lst:
+    if x not in seen:
+        seen.add(x)
+        result.append(x)</code></pre>
+            <p>Либо, начиная с Python 3.7+ (словари сохраняют порядок вставки):</p>
+<pre><code class="language-python"># Однострочник O(n)
+result = list(dict.fromkeys(lst))</code></pre>
+        </div>
+
+        <!-- #3 -->
+        <div class="issue">
+            <span class="tag">Нейминг</span>
+            <h3>#3 &mdash; Невыразительные имена переменных</h3>
+            <p><code>lst</code>, <code>unique_lst</code>, <code>x</code> &mdash; ничего не говорят о содержимом. PEP 8 рекомендует «имена должны отражать назначение». Сокращение <code>lst</code> вместо <code>list</code> оправдано (чтобы не затенять встроенный тип), но лучше выбрать <em>содержательное</em> имя:</p>
+<pre><code class="language-python">numbers = [1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 6, 7, 7, 9]
+unique_numbers = []
+for number in numbers:
+    if number not in unique_numbers:
+        unique_numbers.append(number)</code></pre>
+        </div>
+
+        <!-- #4 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#4 &mdash; Нет <code>if __name__ == "__main__"</code></h3>
+            <p>Без этой конструкции <code>print()</code> выполнится даже при импорте модуля. Это стандартная практика Python — защищать точку входа.</p>
+        </div>
+
+        <!-- #5 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#5 &mdash; Нет type hints</h3>
+            <p>Python 3.14 полноценно поддерживает аннотации типов. Для учебного кода это особенно полезно — помогает понимать, что функция принимает и что возвращает. В текущем коде функции нет вовсе, соответственно и аннотировать нечего.</p>
+        </div>
+
+        <!-- #6 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#6 &mdash; Захардкоженные данные</h3>
+            <p>Входной список жёстко зашит в код. Нет возможности передать другие данные без редактирования файла. Как минимум стоило бы принять ввод от пользователя или параметризовать через аргументы функции.</p>
+        </div>
+
+        <!-- #7 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#7 &mdash; Не рассмотрены краевые случаи</h3>
+            <p>Код не демонстрирует и не проверяет поведение на пустом списке, списке из одного элемента, списке без дубликатов, списке где все элементы одинаковые, и списке со смешанными типами.</p>
+        </div>
+
+        <!-- #8 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#8 &mdash; Нет docstring / комментариев</h3>
+            <p>Ни одного комментария или строки документации. Даже одна строка <code># Удаление дубликатов с сохранением порядка</code> помогла бы читателю мгновенно понять намерение автора.</p>
+        </div>
+
+        <!-- #9 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#9 &mdash; Не показано знание альтернативных подходов</h3>
+            <p>Задание учебное — стоило бы продемонстрировать знание нескольких способов решения задачи, хотя бы в комментариях:</p>
+<pre><code class="language-python"># Способ 1: через set (не сохраняет порядок)
+list(set(numbers))
+
+# Способ 2: dict.fromkeys (сохраняет порядок, Python 3.7+)
+list(dict.fromkeys(numbers))
+
+# Способ 3: set + sorted (если нужна сортировка)
+sorted(set(numbers))
+
+# Способ 4: collections.OrderedDict (для старых версий)
+from collections import OrderedDict
+list(OrderedDict.fromkeys(numbers))</code></pre>
+        </div>
+
+        <!-- #10 -->
+        <div class="issue ok">
+            <span class="tag">Плюс</span>
+            <h3>#10 &mdash; Сохраняется порядок элементов</h3>
+            <p>Выбранный подход (итерация + проверка) <strong>сохраняет исходный порядок</strong> элементов. Это корректное поведение и преимущество перед наивным <code>list(set(...))</code>.</p>
+        </div>
+
+        <!-- #11 -->
+        <div class="issue ok">
+            <span class="tag">Плюс</span>
+            <h3>#11 &mdash; Код читаемый и работает</h3>
+            <p>Логика простая и понятная, результат правильный. Для первого решения — это хорошая отправная точка.</p>
+        </div>
+
+    </section>
+
+    <!-- ===== EDGE CASES ===== -->
+    <section>
+        <h2>Тестирование краевых случаев</h2>
+        <p>Проверяем, как код <em>повёл бы себя</em> на различных входных данных:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Вход</th>
+                    <th>Ожидание</th>
+                    <th>Результат кода</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>[1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 6, 7, 7, 9]</code></td>
+                    <td><code>[1, 2, 3, 4, 5, 6, 7, 9]</code></td>
+                    <td><code>[1, 2, 3, 4, 5, 6, 7, 9]</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>[]</code></td>
+                    <td><code>[]</code></td>
+                    <td><code>[]</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>[42]</code></td>
+                    <td><code>[42]</code></td>
+                    <td><code>[42]</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>[7, 7, 7, 7]</code></td>
+                    <td><code>[7]</code></td>
+                    <td><code>[7]</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>[1, 2, 3]</code></td>
+                    <td><code>[1, 2, 3]</code></td>
+                    <td><code>[1, 2, 3]</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>[3, 1, 2, 1, 3]</code></td>
+                    <td><code>[3, 1, 2]</code></td>
+                    <td><code>[3, 1, 2]</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>[1, "1", 1.0]</code></td>
+                    <td><code>[1, "1"]</code> <small>(1 == 1.0 в Python)</small></td>
+                    <td><code>[1, "1"]</code></td>
+                    <td><span class="status yellow"></span>Работает, но неочевидно</td>
+                </tr>
+                <tr>
+                    <td>10&sup6; случайных int</td>
+                    <td>&lt; 1 сек</td>
+                    <td>~десятки секунд (O(n&sup2;))</td>
+                    <td><span class="status red"></span>Медленно</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ===== IDEAL SOLUTION ===== -->
+    <section>
+        <h2>Эталонное решение для Python 3.14</h2>
+        <p>Если бы нужно было написать «по-взрослому»:</p>
+<pre><code class="language-python">"""Модуль для удаления дубликатов из списка с сохранением порядка."""
+
+
+def remove_duplicates[T](items: list[T]) -> list[T]:
+    """Удаляет дубликаты, сохраняя первое вхождение каждого элемента.
+
+    Args:
+        items: Исходный список (элементы должны быть хешируемыми).
+
+    Returns:
+        Новый список без дубликатов в исходном порядке.
+    """
+    seen: set[T] = set()
+    result: list[T] = []
+    for item in items:
+        if item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+
+if __name__ == "__main__":
+    numbers = [1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 6, 7, 7, 9]
+    print(remove_duplicates(numbers))  # [1, 2, 3, 4, 5, 6, 7, 9]</code></pre>
+    </section>
+
+    <!-- ===== SUMMARY ===== -->
+    <section>
+        <h2>Итог</h2>
+        <table>
+            <thead>
+                <tr><th>Критерий</th><th>Макс.</th><th>Баллы</th><th>Комментарий</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Корректность</td><td>3</td><td>3</td><td>Результат верный на всех разумных входах</td></tr>
+                <tr><td>Производительность</td><td>2</td><td>0.5</td><td>O(n&sup2;) вместо O(n) &mdash; критично</td></tr>
+                <tr><td>Стиль и PEP 8</td><td>2</td><td>0.5</td><td>Нет функции, type hints, docstring, guard</td></tr>
+                <tr><td>Нейминг</td><td>1</td><td>0.5</td><td>Сокращённые, неинформативные имена</td></tr>
+                <tr><td>Полнота решения</td><td>2</td><td>0</td><td>Захардкожено, нет альтернатив, нет тестов</td></tr>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 700; border-top: 2px solid rgba(255,255,255,.15);">
+                    <td>ИТОГО</td><td>10</td><td style="color: var(--warn);">4.5</td><td>Работает, но далеко от хорошего кода</td>
+                </tr>
+            </tfoot>
+        </table>
+    </section>
+
+    <footer>
+        <p>Verification Report &bull; PY-17 &bull; Generated 2026-02-10</p>
+    </footer>
+
+</div>
+
+<script>hljs.highlightAll();</script>
+</body>
+</html>

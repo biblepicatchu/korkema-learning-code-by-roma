@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PY-16 | Verification Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a2e;
+            --surface2: #16213e;
+            --accent: #e94560;
+            --accent2: #0f3460;
+            --ok: #00c853;
+            --warn: #ffd600;
+            --fail: #ff1744;
+            --text: #e0e0e0;
+            --text-muted: #9e9e9e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+        header {
+            text-align: center;
+            padding: 3rem 0 2rem;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 2.5rem;
+        }
+        header h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-top: .5rem;
+        }
+        header .meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.2rem;
+            font-size: .85rem;
+            color: var(--text-muted);
+        }
+        header .meta span { display: flex; align-items: center; gap: .4rem; }
+
+        /* Score bar */
+        .score-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .score-circle {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 800;
+            flex-shrink: 0;
+            background: conic-gradient(var(--fail) 0% 30%, #333 30% 100%);
+            position: relative;
+        }
+        .score-circle::after {
+            content: '';
+            width: 76px; height: 76px;
+            border-radius: 50%;
+            background: var(--surface);
+            position: absolute;
+        }
+        .score-circle span { position: relative; z-index: 1; color: var(--fail); }
+        .score-details { flex: 1; }
+        .score-details h2 { font-size: 1.3rem; margin-bottom: .3rem; }
+        .score-details p { color: var(--text-muted); font-size: .9rem; }
+
+        /* Stats pills */
+        .stats {
+            display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;
+        }
+        .pill {
+            padding: .35rem 1rem;
+            border-radius: 20px;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+        .pill.ok   { background: rgba(0,200,83,.15); color: var(--ok); border: 1px solid rgba(0,200,83,.3); }
+        .pill.warn { background: rgba(255,214,0,.12); color: var(--warn); border: 1px solid rgba(255,214,0,.3); }
+        .pill.fail { background: rgba(255,23,68,.12); color: var(--fail); border: 1px solid rgba(255,23,68,.3); }
+
+        /* Section */
+        section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        /* Issue cards */
+        .issue {
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--warn);
+        }
+        .issue.critical { border-left-color: var(--fail); }
+        .issue.ok { border-left-color: var(--ok); }
+        .issue .tag {
+            display: inline-block;
+            padding: .15rem .6rem;
+            border-radius: 4px;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: .5rem;
+        }
+        .issue.critical .tag { background: rgba(255,23,68,.2); color: var(--fail); }
+        .issue .tag { background: rgba(255,214,0,.15); color: var(--warn); }
+        .issue.ok .tag { background: rgba(0,200,83,.15); color: var(--ok); }
+        .issue h3 { font-size: 1rem; margin-bottom: .4rem; }
+        .issue p { color: var(--text-muted); font-size: .88rem; }
+
+        /* Code blocks */
+        pre { border-radius: 8px !important; margin: .8rem 0 !important; }
+        pre code { font-size: .85rem !important; font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace !important; }
+        code:not(pre code) {
+            background: rgba(255,255,255,.08);
+            padding: .15rem .4rem;
+            border-radius: 4px;
+            font-size: .85em;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .versus {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: .8rem 0;
+        }
+        .versus > div { position: relative; }
+        .versus > div::before {
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            position: absolute;
+            top: 8px; right: 12px;
+            z-index: 2;
+            padding: .1rem .5rem;
+            border-radius: 4px;
+        }
+        .versus > .before::before { content: 'Сейчас'; background: rgba(255,23,68,.3); color: var(--fail); }
+        .versus > .after::before  { content: 'Лучше'; background: rgba(0,200,83,.3); color: var(--ok); }
+
+        /* Edge case table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: .8rem 0;
+            font-size: .88rem;
+        }
+        th, td {
+            padding: .6rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        td .status {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: .4rem;
+        }
+        td .status.green { background: var(--ok); }
+        td .status.red   { background: var(--fail); }
+        td .status.yellow { background: var(--warn); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .score-section { flex-direction: column; text-align: center; }
+            .versus { grid-template-columns: 1fr; }
+            header .meta { flex-direction: column; gap: .5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>PY-16: Подсчёт символов в строке</h1>
+        <div class="subtitle">Verification Report &mdash; count_input.py</div>
+        <div class="meta">
+            <span>Python 3.14</span>
+            <span>Файл: <code>py16-count-input/count_input.py</code></span>
+            <span>Строк кода: 2</span>
+        </div>
+    </header>
+
+    <!-- ===== SCORE ===== -->
+    <div class="score-section">
+        <div class="score-circle"><span>3</span></div>
+        <div class="score-details">
+            <h2>Оценка: 3 / 10</h2>
+            <p>Код формально решает задачу в двух строках, но демонстрирует минимальное понимание. Нет функции, нет форматирования вывода, невыразительная переменная, промпт не соответствует заданию, краевые случаи не рассмотрены.</p>
+            <div class="stats">
+                <span class="pill ok">Корректность +2</span>
+                <span class="pill fail">Стиль -3</span>
+                <span class="pill fail">Нейминг -1</span>
+                <span class="pill warn">Логика -1</span>
+                <span class="pill fail">Полнота -2</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ORIGINAL CODE ===== -->
+    <section>
+        <h2>Исходный код</h2>
+        <pre><code class="language-python">c = input("Введите слово: ")
+print(len(c))</code></pre>
+        <p>Пример работы: ввод <code>Привет</code> &rarr; вывод <code>6</code>. Формально &mdash; верно.</p>
+    </section>
+
+    <!-- ===== ISSUES ===== -->
+    <section>
+        <h2>Найденные замечания</h2>
+
+        <!-- #0 -->
+        <div class="issue critical">
+            <span class="tag">Логика</span>
+            <h3>#0 &mdash; Промпт не соответствует заданию</h3>
+            <p>Задание: <em>«Посчитать количество символов в <strong>строке</strong>»</em>. Промпт пользователю: <code>"Введите слово: "</code>. Строка и слово &mdash; разные вещи. Строка может содержать пробелы, знаки препинания, несколько слов. Формулировка промпта <strong>вводит пользователя в заблуждение</strong> и сужает понимание задачи.</p>
+            <div class="versus">
+                <div class="before">
+<pre><code class="language-python">c = input("Введите слово: ")</code></pre>
+                </div>
+                <div class="after">
+<pre><code class="language-python">text = input("Введите строку: ")</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- #1 -->
+        <div class="issue critical">
+            <span class="tag">Нейминг</span>
+            <h3>#1 &mdash; Однобуквенная переменная <code>c</code></h3>
+            <p>Имя <code>c</code> не несёт <strong>никакого смысла</strong>. Что такое <code>c</code>? Character? Count? Cat? PEP 8 явно говорит: <em>«Имена переменных должны быть описательными»</em>. Однобуквенные имена допустимы только для счётчиков в циклах (<code>i</code>, <code>j</code>) и математических формул.</p>
+<pre><code class="language-python"># Плохо:
+c = input("Введите слово: ")
+
+# Хорошо:
+user_text = input("Введите строку: ")
+# или
+text = input("Введите строку: ")
+# или хотя бы
+string = input("Введите строку: ")</code></pre>
+        </div>
+
+        <!-- #2 -->
+        <div class="issue critical">
+            <span class="tag">Архитектура</span>
+            <h3>#2 &mdash; Нет функции</h3>
+            <p>Код написан в глобальной области &mdash; две строки «в лоб». Невозможно переиспользовать, невозможно протестировать, невозможно импортировать. Даже для учебного задания из двух строк стоит оформить логику в функцию &mdash; это формирует <strong>правильные привычки</strong>.</p>
+            <div class="versus">
+                <div class="before">
+<pre><code class="language-python">c = input("Введите слово: ")
+print(len(c))</code></pre>
+                </div>
+                <div class="after">
+<pre><code class="language-python">def count_chars(text: str) -> int:
+    """Возвращает количество символов в строке."""
+    return len(text)
+
+
+if __name__ == "__main__":
+    user_input = input("Введите строку: ")
+    print(f"Количество символов: {count_chars(user_input)}")</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- #3 -->
+        <div class="issue critical">
+            <span class="tag">UX</span>
+            <h3>#3 &mdash; Голый вывод числа без контекста</h3>
+            <p><code>print(len(c))</code> выводит просто число &mdash; например, <code>6</code>. Без пояснения пользователь может не понять, что это означает. Особенно если программу запускает кто-то другой.</p>
+<pre><code class="language-python"># Плохо:
+print(len(c))
+# Вывод: 6
+
+# Хорошо:
+print(f"Количество символов: {len(text)}")
+# Вывод: Количество символов: 6
+
+# Ещё лучше:
+print(f'Строка "{text}" содержит {len(text)} символов.')
+# Вывод: Строка "Привет" содержит 6 символов.</code></pre>
+        </div>
+
+        <!-- #4 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#4 &mdash; Нет <code>if __name__ == "__main__"</code></h3>
+            <p>Без guard-конструкции <code>input()</code> вызовется даже при импорте модуля. Это стандартная защита точки входа в Python &mdash; её отсутствие говорит о том, что студент о ней не знает или игнорирует.</p>
+        </div>
+
+        <!-- #5 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#5 &mdash; Нет type hints</h3>
+            <p>Python 3.14 полноценно поддерживает аннотации типов. Если бы была функция, можно было бы аннотировать <code>def count_chars(text: str) -> int</code>. Без функции аннотировать нечего &mdash; но это проблема пункта #2.</p>
+        </div>
+
+        <!-- #6 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#6 &mdash; Нет docstring / комментариев</h3>
+            <p>Ни одного комментария, ни строки документации. Код из двух строк можно понять и без них, но привычка документировать &mdash; это то, что нужно вырабатывать с самого начала.</p>
+        </div>
+
+        <!-- #7 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#7 &mdash; Не показано понимание <code>len()</code></h3>
+            <p>Студент использует <code>len()</code> как чёрный ящик. В учебном контексте стоило бы показать понимание того, <strong>что именно</strong> считает <code>len()</code>:</p>
+            <ul style="margin: .5rem 0 .5rem 1.5rem; color: var(--text-muted); font-size: .88rem;">
+                <li><code>len()</code> считает <strong>Unicode code points</strong>, а не байты и не графемные кластеры</li>
+                <li><code>len("café")</code> &mdash; 4 (при NFC-нормализации) или 5 (при NFD, где <code>é</code> = <code>e</code> + <code>´</code>)</li>
+                <li><code>len("👨‍👩‍👧")</code> &mdash; 5, а не 1 (это составной эмодзи из нескольких code points)</li>
+            </ul>
+            <p>Хотя бы комментарий <code># len() считает символы Unicode</code> показал бы осознанность.</p>
+        </div>
+
+        <!-- #8 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#8 &mdash; Не рассмотрены краевые случаи</h3>
+            <p>Что если пользователь введёт пустую строку? Строку из одних пробелов? Строку с эмодзи? С переносами строк? Код технически обработает всё это через <code>len()</code>, но студент не продемонстрировал, что он об этом <strong>думал</strong>.</p>
+        </div>
+
+        <!-- #9 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#9 &mdash; Не показаны альтернативные способы</h3>
+            <p>Задание учебное &mdash; стоило бы продемонстрировать знание нескольких подходов к подсчёту символов:</p>
+<pre><code class="language-python"># Способ 1: встроенная функция (самый правильный)
+length = len(text)
+
+# Способ 2: ручной подсчёт через цикл
+count = 0
+for char in text:
+    count += 1
+
+# Способ 3: через sum и генераторное выражение
+count = sum(1 for _ in text)
+
+# Способ 4: подсчёт конкретных символов
+from collections import Counter
+char_counts = Counter(text)
+total = sum(char_counts.values())</code></pre>
+        </div>
+
+        <!-- #10 -->
+        <div class="issue">
+            <span class="tag">Полнота</span>
+            <h3>#10 &mdash; Нет разделения «символов с пробелами» и «без пробелов»</h3>
+            <p>Классическая задача «посчитать символы» обычно подразумевает два счётчика: с пробелами и без. Студент не задумался о такой интерпретации.</p>
+<pre><code class="language-python">text = input("Введите строку: ")
+print(f"С пробелами:  {len(text)}")
+print(f"Без пробелов: {len(text.replace(' ', ''))}")
+# или
+print(f"Без пробелов: {sum(1 for c in text if not c.isspace())}")</code></pre>
+        </div>
+
+        <!-- #11 -->
+        <div class="issue">
+            <span class="tag">Стиль</span>
+            <h3>#11 &mdash; Имя файла <code>count_input.py</code> &mdash; нечёткое</h3>
+            <p>Что значит «count input»? Считаем количество вводов? Считаем входные данные? Более точное имя: <code>count_chars.py</code>, <code>char_counter.py</code> или <code>string_length.py</code>.</p>
+        </div>
+
+        <!-- POSITIVES -->
+        <div class="issue ok">
+            <span class="tag">Плюс</span>
+            <h3>#12 &mdash; Код работает</h3>
+            <p>При всех замечаниях, <code>len()</code> &mdash; это <strong>правильный</strong> и <strong>идиоматичный</strong> способ узнать длину строки в Python. Студент не стал городить велосипед с ручным подсчётом &mdash; это хорошо.</p>
+        </div>
+
+        <div class="issue ok">
+            <span class="tag">Плюс</span>
+            <h3>#13 &mdash; Есть пользовательский ввод</h3>
+            <p>Студент использовал <code>input()</code> для получения данных от пользователя, а не захардкодил строку. Это показывает понимание интерактивности программы.</p>
+        </div>
+
+    </section>
+
+    <!-- ===== EDGE CASES ===== -->
+    <section>
+        <h2>Тестирование краевых случаев</h2>
+        <p>Проверяем, как код <em>повёл бы себя</em> на различных входных данных:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ввод</th>
+                    <th>Ожидание</th>
+                    <th>Результат кода</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Привет</code></td>
+                    <td><code>6</code></td>
+                    <td><code>6</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>Hello World</code></td>
+                    <td><code>11</code></td>
+                    <td><code>11</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><em>(пустая строка)</em></td>
+                    <td><code>0</code></td>
+                    <td><code>0</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>&nbsp;&nbsp;&nbsp;</code> (3 пробела)</td>
+                    <td><code>3</code></td>
+                    <td><code>3</code></td>
+                    <td><span class="status yellow"></span>Считает, но не уточняет</td>
+                </tr>
+                <tr>
+                    <td><code>café</code> (NFC)</td>
+                    <td><code>4</code></td>
+                    <td><code>4</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>cafe&#769;</code> (NFD: e + &#x301;)</td>
+                    <td><code>4</code> (визуально 4 символа)</td>
+                    <td><code>5</code></td>
+                    <td><span class="status red"></span>Неочевидно &mdash; combining char</td>
+                </tr>
+                <tr>
+                    <td><code>123!@#</code></td>
+                    <td><code>6</code></td>
+                    <td><code>6</code></td>
+                    <td><span class="status green"></span>OK</td>
+                </tr>
+                <tr>
+                    <td><code>tab&#9;here</code></td>
+                    <td><code>8</code></td>
+                    <td><code>8</code></td>
+                    <td><span class="status yellow"></span>Tab = 1 символ, но это неочевидно</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ===== IDEAL SOLUTION ===== -->
+    <section>
+        <h2>Эталонное решение для Python 3.14</h2>
+        <p>Как выглядела бы полноценная реализация:</p>
+<pre><code class="language-python">"""Подсчёт количества символов в строке, введённой пользователем."""
+
+import unicodedata
+
+
+def count_characters(text: str) -> dict[str, int]:
+    """Подсчитывает символы в строке разными способами.
+
+    Args:
+        text: Строка для анализа.
+
+    Returns:
+        Словарь с различными метриками длины.
+    """
+    normalized = unicodedata.normalize("NFC", text)
+    return {
+        "всего": len(normalized),
+        "без_пробелов": sum(1 for ch in normalized if not ch.isspace()),
+        "букв": sum(1 for ch in normalized if ch.isalpha()),
+        "цифр": sum(1 for ch in normalized if ch.isdigit()),
+    }
+
+
+if __name__ == "__main__":
+    user_input = input("Введите строку: ")
+
+    if not user_input:
+        print("Вы ввели пустую строку.")
+    else:
+        stats = count_characters(user_input)
+        print(f'Строка: "{user_input}"')
+        for label, value in stats.items():
+            print(f"  {label}: {value}")</code></pre>
+        <p>Пример вывода для <code>"Hello, World! 42"</code>:</p>
+<pre><code class="language-plaintext">Строка: "Hello, World! 42"
+  всего: 16
+  без_пробелов: 14
+  букв: 10
+  цифр: 2</code></pre>
+    </section>
+
+    <!-- ===== SUMMARY ===== -->
+    <section>
+        <h2>Итог</h2>
+        <table>
+            <thead>
+                <tr><th>Критерий</th><th>Макс.</th><th>Баллы</th><th>Комментарий</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Корректность</td><td>3</td><td>2</td><td><code>len()</code> верен, но промпт говорит «слово» вместо «строки»</td></tr>
+                <tr><td>Стиль и PEP 8</td><td>2</td><td>0</td><td>Нет функции, guard, type hints, docstring</td></tr>
+                <tr><td>Нейминг</td><td>1</td><td>0</td><td>Однобуквенная переменная <code>c</code>, нечёткое имя файла</td></tr>
+                <tr><td>UX / вывод</td><td>2</td><td>0.5</td><td>Голое число без пояснения</td></tr>
+                <tr><td>Полнота решения</td><td>2</td><td>0.5</td><td>Нет альтернатив, краевых случаев, анализа</td></tr>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 700; border-top: 2px solid rgba(255,255,255,.15);">
+                    <td>ИТОГО</td><td>10</td><td style="color: var(--fail);">3</td><td>Минимальное решение &mdash; формально работает, по сути пустое</td>
+                </tr>
+            </tfoot>
+        </table>
+    </section>
+
+    <footer>
+        <p>Verification Report &bull; PY-16 &bull; Generated 2026-02-10</p>
+    </footer>
+
+</div>
+
+<script>hljs.highlightAll();</script>
+</body>
+</html>

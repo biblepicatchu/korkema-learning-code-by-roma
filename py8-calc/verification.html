@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PY-8 Calculator &mdash; Code Review</title>
+
+    <!-- Prism.js: тема + Python -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --heading: #f0f6fc;
+            --accent: #58a6ff;
+            --red: #f85149;
+            --orange: #d29922;
+            --green: #3fb950;
+            --purple: #bc8cff;
+            --pink: #f778ba;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            color: var(--heading);
+            font-size: 2rem;
+            margin-bottom: .5rem;
+        }
+
+        header .meta {
+            color: #8b949e;
+            font-size: .9rem;
+        }
+
+        .score-board {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .score-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            min-width: 130px;
+        }
+
+        .score-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .score-card .label {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: #8b949e;
+        }
+
+        .score-card.critical .value { color: var(--red); }
+        .score-card.warning  .value { color: var(--orange); }
+        .score-card.info     .value { color: var(--accent); }
+        .score-card.style    .value { color: var(--purple); }
+
+        h2 {
+            color: var(--heading);
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        h3 {
+            color: var(--heading);
+            font-size: 1.1rem;
+            margin: 1.5rem 0 .5rem;
+        }
+
+        .source-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .source-block .title-bar {
+            background: #1c2129;
+            padding: .6rem 1rem;
+            font-size: .8rem;
+            color: #8b949e;
+            border-bottom: 1px solid var(--border);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .source-block pre[class*="language-"] {
+            margin: 0;
+            border-radius: 0;
+            font-size: .85rem;
+        }
+
+        .issue {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--red);
+            border-radius: 8px;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .issue.warning  { border-left-color: var(--orange); }
+        .issue.info     { border-left-color: var(--accent); }
+        .issue.style    { border-left-color: var(--purple); }
+
+        .issue .tag {
+            display: inline-block;
+            font-size: .7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: .5rem;
+        }
+
+        .issue .tag.critical { background: rgba(248,81,73,.15); color: var(--red); }
+        .issue .tag.warning  { background: rgba(210,153,34,.15); color: var(--orange); }
+        .issue .tag.info     { background: rgba(88,166,255,.15); color: var(--accent); }
+        .issue .tag.style    { background: rgba(188,140,255,.15); color: var(--purple); }
+
+        .issue .title {
+            font-weight: 600;
+            color: var(--heading);
+            margin-bottom: .4rem;
+        }
+
+        .issue .line-ref {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: .8rem;
+            color: #8b949e;
+            margin-bottom: .4rem;
+        }
+
+        .issue p {
+            margin-bottom: .6rem;
+        }
+
+        .issue pre[class*="language-"] {
+            font-size: .8rem;
+            border-radius: 6px;
+            margin-top: .5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: .9rem;
+        }
+
+        th, td {
+            padding: .6rem .8rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        th {
+            background: #1c2129;
+            color: var(--heading);
+            font-weight: 600;
+        }
+
+        td code {
+            background: rgba(110,118,129,.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: .82rem;
+        }
+
+        .verdict {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .verdict .grade {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--orange);
+        }
+
+        .verdict .comment {
+            color: #8b949e;
+            margin-top: .5rem;
+        }
+
+        .test-table tr.pass td:first-child { color: var(--green); }
+        .test-table tr.fail td:first-child { color: var(--red); }
+
+        footer {
+            text-align: center;
+            color: #484f58;
+            font-size: .8rem;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ═══════════════ HEADER ═══════════════ -->
+    <header>
+        <h1>PY-8 &laquo;Калькулятор&raquo; &mdash; Code Review</h1>
+        <div class="meta">Файл: <strong>calculator.py</strong> &nbsp;|&nbsp; Python 3.14 &nbsp;|&nbsp; 21 строка &nbsp;|&nbsp; 10&nbsp;февраля&nbsp;2026</div>
+
+        <div class="score-board">
+            <div class="score-card critical">
+                <div class="value">3</div>
+                <div class="label">Critical</div>
+            </div>
+            <div class="score-card warning">
+                <div class="value">3</div>
+                <div class="label">Warning</div>
+            </div>
+            <div class="score-card info">
+                <div class="value">3</div>
+                <div class="label">Info</div>
+            </div>
+            <div class="score-card style">
+                <div class="value">4</div>
+                <div class="label">Style / PEP&nbsp;8</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════ ИСХОДНЫЙ КОД ═══════════════ -->
+    <h2>Исходный код</h2>
+    <div class="source-block">
+        <div class="title-bar">calculator.py</div>
+        <pre class="line-numbers"><code class="language-python">def main():
+    a = float(input("Введите первое число:"))
+    op = input("Введите операцию(+,-,*,/):")
+    b = float(input("Введите второе чиcло:"))
+
+    if op == "+":
+        result = a + b
+    elif op == "-":
+        result = a - b
+    elif op == "*":
+        result = a * b
+    elif op == "/":
+        result = a / b
+    else:
+        print("Неизвестная операция")
+        return
+
+    print(f"Результат: {result}")
+
+if __name__ == "__main__":
+    main()</code></pre>
+    </div>
+
+    <!-- ═══════════════ CRITICAL ═══════════════ -->
+    <h2>Critical</h2>
+
+    <div class="issue">
+        <span class="tag critical">Critical</span>
+        <div class="line-ref">Строка 13</div>
+        <div class="title">C-1. Деление на ноль &mdash; необработанное исключение</div>
+        <p>
+            Если пользователь введёт <code>b = 0</code> и операцию <code>/</code>,
+            программа упадёт с <code>ZeroDivisionError</code>.
+            Это самый классический баг калькулятора &mdash; и здесь он присутствует.
+        </p>
+        <pre><code class="language-python">>>> 10 / 0
+ZeroDivisionError: float division by zero</code></pre>
+        <p><strong>Как исправить:</strong></p>
+        <pre><code class="language-python">elif op == "/":
+    if b == 0:
+        print("Ошибка: деление на ноль!")
+        return
+    result = a / b</code></pre>
+    </div>
+
+    <div class="issue">
+        <span class="tag critical">Critical</span>
+        <div class="line-ref">Строки 2, 4</div>
+        <div class="title">C-2. Падение при нечисловом вводе</div>
+        <p>
+            <code>float(input(...))</code> без <code>try/except</code>
+            вызовет <code>ValueError</code>, если пользователь введёт текст, пустую строку или спецсимвол.
+        </p>
+        <pre><code class="language-python">>>> float("abc")
+ValueError: could not convert string to float: 'abc'</code></pre>
+        <p><strong>Как исправить:</strong></p>
+        <pre><code class="language-python">try:
+    a = float(input("Введите первое число: "))
+except ValueError:
+    print("Ошибка: введите число!")
+    return</code></pre>
+    </div>
+
+    <div class="issue">
+        <span class="tag critical">Critical</span>
+        <div class="line-ref">Строка 4</div>
+        <div class="title">C-3. Скрытая опечатка: латинская &laquo;c&raquo; вместо кириллической &laquo;с&raquo;</div>
+        <p>
+            В слове <code>"Введите второе чи<strong style="color:var(--red)">c</strong>ло:"</code> буква
+            &laquo;c&raquo; &mdash; <strong>латинская</strong> (U+0063), а должна быть кириллическая &laquo;с&raquo; (U+0441).
+            Визуально они идентичны, но это нарушает единообразие кодировки и может вызвать проблемы
+            при поиске по тексту, тестировании и локализации.
+        </p>
+        <table>
+            <tr><th>Сейчас</th><th>Код символа</th><th>Должно быть</th><th>Код символа</th></tr>
+            <tr>
+                <td><code>чиcло</code></td>
+                <td>U+0063 (Latin Small Letter C)</td>
+                <td><code>число</code></td>
+                <td>U+0441 (Cyrillic Small Letter Es)</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ═══════════════ WARNING ═══════════════ -->
+    <h2>Warning</h2>
+
+    <div class="issue warning">
+        <span class="tag warning">Warning</span>
+        <div class="line-ref">Строка 13</div>
+        <div class="title">W-1. Неточность вычислений с плавающей точкой</div>
+        <p>
+            Все числа приводятся к <code>float</code>. Классическая проблема IEEE&nbsp;754:
+        </p>
+        <pre><code class="language-python">>>> 0.1 + 0.2
+0.30000000000000004</code></pre>
+        <p>
+            Пользователь увидит: <code>Результат: 0.30000000000000004</code>.
+            Для учебного калькулятора стоит округлять результат через <code>round(result, 10)</code>
+            или использовать модуль <code>decimal</code>.
+        </p>
+    </div>
+
+    <div class="issue warning">
+        <span class="tag warning">Warning</span>
+        <div class="line-ref">Вся программа</div>
+        <div class="title">W-2. Калькулятор одноразовый &mdash; нет цикла</div>
+        <p>
+            После одного вычисления программа завершается. Полноценный калькулятор должен
+            работать в цикле и предлагать пользователю продолжить или выйти.
+        </p>
+        <pre><code class="language-python">while True:
+    # ... вычисления ...
+    again = input("Ещё раз? (д/н): ")
+    if again.lower() != "д":
+        break</code></pre>
+    </div>
+
+    <div class="issue warning">
+        <span class="tag warning">Warning</span>
+        <div class="line-ref">Строки 2, 7</div>
+        <div class="title">W-3. Целые числа отображаются как float</div>
+        <p>
+            <code>3 + 2</code> покажет <code>5.0</code> вместо <code>5</code>.
+            Можно проверять, является ли результат целым:
+        </p>
+        <pre><code class="language-python">if result == int(result):
+    result = int(result)</code></pre>
+    </div>
+
+    <!-- ═══════════════ INFO ═══════════════ -->
+    <h2>Info</h2>
+
+    <div class="issue info">
+        <span class="tag info">Info</span>
+        <div class="line-ref">Строки 6-16</div>
+        <div class="title">I-1. Цепочку if/elif можно заменить на словарь</div>
+        <p>
+            В Python идиоматичнее использовать словарь операций.
+            Это короче, расширяемо и соответствует принципу «данные вместо кода»:
+        </p>
+        <pre><code class="language-python">import operator
+
+ops = {
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv,
+}
+
+func = ops.get(op)
+if func is None:
+    print("Неизвестная операция")
+    return
+
+result = func(a, b)</code></pre>
+    </div>
+
+    <div class="issue info">
+        <span class="tag info">Info</span>
+        <div class="line-ref">Вся программа</div>
+        <div class="title">I-2. Нет поддержки дополнительных операций</div>
+        <p>
+            Для полноценного калькулятора ожидаются как минимум:
+        </p>
+        <table>
+            <tr><th>Операция</th><th>Оператор</th><th>Пример</th></tr>
+            <tr><td>Возведение в степень</td><td><code>**</code></td><td><code>2 ** 10 = 1024</code></td></tr>
+            <tr><td>Целочисленное деление</td><td><code>//</code></td><td><code>7 // 2 = 3</code></td></tr>
+            <tr><td>Остаток от деления</td><td><code>%</code></td><td><code>7 % 3 = 1</code></td></tr>
+        </table>
+    </div>
+
+    <div class="issue info">
+        <span class="tag info">Info</span>
+        <div class="line-ref">Функция main()</div>
+        <div class="title">I-3. Функция ничего не возвращает</div>
+        <p>
+            <code>main()</code> печатает результат, но не возвращает его (<code>return result</code>).
+            Это делает функцию непригодной для повторного использования и тестирования.
+            Хорошая практика &mdash; разделять вычисление и вывод:
+        </p>
+        <pre><code class="language-python">def calculate(a: float, op: str, b: float) -> float:
+    """Чистое вычисление без побочных эффектов."""
+    ...
+
+def main():
+    """Ввод/вывод."""
+    ...
+    result = calculate(a, op, b)
+    print(f"Результат: {result}")</code></pre>
+    </div>
+
+    <!-- ═══════════════ STYLE / PEP 8 ═══════════════ -->
+    <h2>Style / PEP 8</h2>
+
+    <div class="issue style">
+        <span class="tag style">Style</span>
+        <div class="line-ref">Строки 2, 3, 4</div>
+        <div class="title">S-1. Нет пробела после двоеточия в prompt-строках</div>
+        <p>
+            <code>"Введите первое число:"</code> &rarr; ввод пользователя «прилипает» к двоеточию:<br>
+            <code>Введите первое число:42</code>.
+            По стандартам UX нужен пробел: <code>"Введите первое число: "</code>.
+        </p>
+    </div>
+
+    <div class="issue style">
+        <span class="tag style">Style</span>
+        <div class="line-ref">Строка 3</div>
+        <div class="title">S-2. Нет пробела после скобки в приглашении оператора</div>
+        <p>
+            <code>"Введите операцию(+,-,*,/):"</code> &mdash; скобка прилипает к слову.
+            Лучше: <code>"Введите операцию (+, -, *, /): "</code>.
+        </p>
+    </div>
+
+    <div class="issue style">
+        <span class="tag style">Style</span>
+        <div class="line-ref">Вся программа</div>
+        <div class="title">S-3. Отсутствуют type hints</div>
+        <p>
+            Python 3.14 полностью поддерживает аннотации типов. Для учебного кода это
+            хорошая привычка:
+        </p>
+        <pre><code class="language-python">def main() -> None:
+    a: float = float(input("Введите первое число: "))</code></pre>
+    </div>
+
+    <div class="issue style">
+        <span class="tag style">Style</span>
+        <div class="line-ref">Вся программа</div>
+        <div class="title">S-4. Нет docstring у функции main()</div>
+        <p>
+            PEP 257 рекомендует документировать каждую публичную функцию. Даже
+            однострочный docstring улучшает читаемость:
+        </p>
+        <pre><code class="language-python">def main() -> None:
+    """Консольный калькулятор с четырьмя базовыми операциями."""</code></pre>
+    </div>
+
+    <!-- ═══════════════ ТЕСТ-КЕЙСЫ ═══════════════ -->
+    <h2>Сценарии тестирования</h2>
+    <p>Ниже &mdash; таблица тестов, которые калькулятор должен проходить. Зелёные &mdash; пройдут, красные &mdash; упадут.</p>
+
+    <table class="test-table">
+        <thead>
+            <tr><th>Статус</th><th>Ввод</th><th>Ожидание</th><th>Факт</th></tr>
+        </thead>
+        <tbody>
+            <tr class="pass"><td>PASS</td><td>10 + 5</td><td>15.0</td><td>15.0</td></tr>
+            <tr class="pass"><td>PASS</td><td>10 - 3</td><td>7.0</td><td>7.0</td></tr>
+            <tr class="pass"><td>PASS</td><td>4 * 2.5</td><td>10.0</td><td>10.0</td></tr>
+            <tr class="pass"><td>PASS</td><td>9 / 3</td><td>3.0</td><td>3.0</td></tr>
+            <tr class="pass"><td>PASS</td><td>5 ^ 2 (неизвестный оп.)</td><td>&laquo;Неизвестная операция&raquo;</td><td>&laquo;Неизвестная операция&raquo;</td></tr>
+            <tr class="fail"><td>FAIL</td><td>10 / 0</td><td>&laquo;Ошибка: деление на ноль&raquo;</td><td>ZeroDivisionError &mdash; краш</td></tr>
+            <tr class="fail"><td>FAIL</td><td>abc + 1</td><td>&laquo;Ошибка: введите число&raquo;</td><td>ValueError &mdash; краш</td></tr>
+            <tr class="fail"><td>FAIL</td><td>(пустой ввод) + 1</td><td>&laquo;Ошибка: введите число&raquo;</td><td>ValueError &mdash; краш</td></tr>
+            <tr class="fail"><td>FAIL</td><td>0.1 + 0.2</td><td>0.3</td><td>0.30000000000000004</td></tr>
+            <tr class="fail"><td>FAIL</td><td>3 + 2 (и хотим &laquo;5&raquo;)</td><td>5</td><td>5.0</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ═══════════════ ИТОГО ═══════════════ -->
+    <h2>Итого</h2>
+
+    <table>
+        <thead>
+            <tr><th>Категория</th><th>Кол-во</th><th>Описание</th></tr>
+        </thead>
+        <tbody>
+            <tr><td style="color:var(--red)">Critical</td><td>3</td><td>Деление на 0, невалидный ввод, скрытая опечатка</td></tr>
+            <tr><td style="color:var(--orange)">Warning</td><td>3</td><td>Float-точность, нет цикла, int-вывод</td></tr>
+            <tr><td style="color:var(--accent)">Info</td><td>3</td><td>Словарь вместо if/elif, доп. операции, return</td></tr>
+            <tr><td style="color:var(--purple)">Style</td><td>4</td><td>Пробелы в промптах, type hints, docstring</td></tr>
+            <tr><td><strong>Всего</strong></td><td><strong>13</strong></td><td></td></tr>
+        </tbody>
+    </table>
+
+    <div class="verdict">
+        <div class="grade">4 / 10</div>
+        <p class="comment">
+            Базовая логика работает, но калькулятор падает на любом некорректном вводе.
+            Два критических бага (деление на ноль и невалидный ввод) делают программу
+            непригодной для реального использования. Скрытая опечатка с латинской &laquo;c&raquo; &mdash;
+            коварная ловушка. Для учебного задания &mdash; неплохой старт, но требуется доработка.
+        </p>
+    </div>
+
+    <footer>
+        Code review &bull; Claude &bull; 10 февраля 2026
+    </footer>
+
+</div>
+</body>
+</html>
