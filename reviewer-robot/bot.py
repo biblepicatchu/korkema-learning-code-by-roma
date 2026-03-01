@@ -58,7 +58,7 @@ async def run_claude_review(task_number: str, task_dir: str, prompt: str, messag
         process = await asyncio.create_subprocess_exec(
             "claude", "-p", "--dangerously-skip-permissions",
             "--model", "claude-haiku-4-5-20251001",
-            "--max-turns", "15", "--fast",
+            "--max-turns", "15",
             prompt,
             cwd=task_dir,
             stdout=asyncio.subprocess.PIPE,
