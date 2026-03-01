@@ -184,7 +184,11 @@ def main() -> None:
     logger.debug("  DEBUG:              %s", DEBUG)
     logger.debug("=" * 60)
 
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    async def post_init(application) -> None:
+        bot_info = await application.bot.get_me()
+        logger.info("get_me: id=%s, username=@%s, name='%s'", bot_info.id, bot_info.username, bot_info.first_name)
+
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).post_init(post_init).build()
 
     app.add_handler(
         MessageHandler(
@@ -194,8 +198,6 @@ def main() -> None:
     )
 
     logger.info("Бот запущен. Жду сообщения...")
-    import asyncio
-    asyncio.set_event_loop(asyncio.new_event_loop())
     app.run_polling(poll_interval=60)
     logger.info("Бот остановлен.")
 
