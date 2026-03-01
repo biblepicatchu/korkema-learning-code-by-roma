@@ -1,0 +1,1 @@
+sudo supervisorctl restart reviewer-bot && sleep 5 && sudo supervisorctl status reviewer-bot
