@@ -13,30 +13,30 @@
     }
 
     body {
-      background-color: #0d1117;
+      background-color: #161b22;
       color: #c9d1d9;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       line-height: 1.7;
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       padding: 2rem;
     }
 
     .container {
-      max-width: 720px;
       width: 100%;
     }
 
     .card {
-      background: linear-gradient(145deg, #161b22, #1c2333);
+      background: linear-gradient(145deg, #0d1117, #0f1319);
       border: 1px solid #30363d;
       border-radius: 16px;
       padding: 2.5rem;
-      box-shadow:
-        0 4px 6px rgba(0, 0, 0, 0.3),
-        0 16px 48px rgba(0, 0, 0, 0.25);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
 
     .badge {
@@ -49,14 +49,13 @@
       letter-spacing: 0.08em;
       padding: 0.3rem 0.8rem;
       border-radius: 20px;
-      margin-bottom: 1.2rem;
+      flex-shrink: 0;
     }
 
     h1 {
       font-size: 1.8rem;
       font-weight: 700;
       color: #f0f6fc;
-      margin-bottom: 1.5rem;
       line-height: 1.3;
     }
 
@@ -136,6 +135,31 @@
       font-weight: 600;
     }
 
+    .prompt-block {
+      margin-top: 0.7rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #30363d;
+      border-left: 3px solid #bc8cff;
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.82rem;
+      color: #e6edf3;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .cmd-block {
+      display: inline-block;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.25rem 0.6rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.82rem;
+      color: #3fb950;
+    }
+
     .footer {
       margin-top: 1.8rem;
       padding-top: 1.2rem;
@@ -158,8 +182,10 @@
 <body>
   <div class="container">
     <div class="card">
-      <div class="badge">Telegram Bot</div>
-      <h1><span>Reviewer Robot</span></h1>
+      <div class="header">
+        <h1><span>Reviewer Robot</span></h1>
+        <div class="badge">Telegram Bot</div>
+      </div>
 
       <p class="description">
         Телеграм-бот, который проверяет учебные задания по Python с помощью Claude AI.
@@ -183,8 +209,15 @@
           <div class="feature-text">
             <strong>Парсинг задания</strong> — извлекает номер задачи из тега
             <code>[py-N]</code> в оригинальном сообщении, находит
-            соответствующую папку <code>pyN-*</code> с кодом ученика
-            и формирует промпт из шаблона с описанием задачи.
+            соответствующую папку <code>pyN-*</code> с номером задания
+            и подставляет номер и описание в шаблон промпта:
+            <div class="prompt-block">Проверь папку
+pyXXX-*
+задача была по обучению пайтону 3.14. Докопаться надо до всего чего только можно.
+Надо было
+"тут описание задачи"
+Создай в той же папке verification.html одностраничный отчёт с проверкой.
+Используй красивую библиотеку для отображения кода.</div>
           </div>
         </div>
 
@@ -192,9 +225,9 @@
           <div class="feature-icon python">🐍</div>
           <div class="feature-text">
             <strong>Проверка через Claude CLI</strong> — запускает
-            <code>claude&nbsp;-p&nbsp;--dangerously-skip-permissions</code>
+            <span class="cmd-block">claude -p --dangerously-skip-permissions</span>
             в папке с заданием, передавая собранный промпт.
-            Таймаут настраивается через <code>CLAUDE_TIMEOUT</code> (по умолчанию 300 сек).
+            Таймаут настраивается через <code>CLAUDE_TIMEOUT</code> (по умолчанию 600 сек).
           </div>
         </div>
 
@@ -202,7 +235,7 @@
           <div class="feature-icon html">📄</div>
           <div class="feature-text">
             <strong>HTML-отчёт в чат</strong> — Claude создаёт файл
-            <code>verification.html</code> с результатами проверки,
+            <span class="cmd-block">verification.html</span> с результатами проверки,
             бот отправляет его в Telegram как документ.
             При ошибках или таймауте — сообщение с описанием проблемы.
           </div>

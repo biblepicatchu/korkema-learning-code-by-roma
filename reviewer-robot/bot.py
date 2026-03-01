@@ -194,6 +194,8 @@ def main() -> None:
     )
 
     logger.info("Бот запущен. Жду сообщения...")
+    import asyncio
+    asyncio.set_event_loop(asyncio.new_event_loop())
     app.run_polling()
     logger.info("Бот остановлен.")
 
