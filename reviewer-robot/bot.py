@@ -154,6 +154,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     logger.debug("  Базовая директория: %s", base_dir)
 
+    logger.info("Обновляю репозиторий (git pull) в %s...", base_dir)
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "git", "pull",
+            cwd=base_dir,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=60)
+        git_output = stdout.decode(errors="replace").strip()
+        logger.info("git pull завершён (код %d): %s", process.returncode, git_output)
+        if process.returncode != 0:
+            git_err = stderr.decode(errors="replace").strip()
+            logger.error("git pull ошибка: %s", git_err)
+            await message.reply_text(f"Ошибка обновления репозитория: {git_err}")
+            return
+    except asyncio.TimeoutError:
+        logger.error("git pull таймаут (60с)")
+        await message.reply_text("Таймаут при обновлении репозитория")
+        return
+    except Exception as e:
+        logger.error("git pull исключение: %s", e)
+        await message.reply_text(f"Ошибка обновления репозитория: {e}")
+        return
+
     for task_number in brackets:
         pattern = os.path.join(base_dir, f"py{task_number}-*")
         matches = glob.glob(pattern)
