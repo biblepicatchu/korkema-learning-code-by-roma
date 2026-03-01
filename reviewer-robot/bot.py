@@ -24,7 +24,7 @@ ALLOWED_USER_IDS = [
 GROUP_CHAT_ID = int(os.environ["GROUP_CHAT_ID"]) if os.environ.get("GROUP_CHAT_ID") else None
 REVIEW_KEYWORDS = ["проверь", "проверить", "ревью", "review", "check", "test", "тест"]
 DEBUG = os.environ.get("DEBUG", "").lower() in ("true", "1", "yes")
-CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "300"))
+CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "1200"))
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -196,7 +196,7 @@ def main() -> None:
     logger.info("Бот запущен. Жду сообщения...")
     import asyncio
     asyncio.set_event_loop(asyncio.new_event_loop())
-    app.run_polling()
+    app.run_polling(poll_interval=60)
     logger.info("Бот остановлен.")
 
 
